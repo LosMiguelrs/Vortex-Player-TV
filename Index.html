@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Vortex Player TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<style>
+body{margin:0;background:#000;color:#fff;font-family:Arial}
+header{padding:12px;font-size:20px;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:12px}
+.card img{width:100%;border-radius:6px}
+.card p{text-align:center;font-size:14px}
+video{width:100%;max-height:300px}
+.hidden{display:none}
+button,input{padding:10px;margin:6px;width:80%}
+button{background:red;color:#fff;border:none}
+</style>
+</head>
+
+<body>
+<header>Vortex Player TV</header>
+
+<div id="login">
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+<button onclick="login()">Entrar</button>
+<p id="error"></p>
+</div>
+
+<div id="app" class="hidden">
+<div class="grid" id="catalogo"></div>
+<video id="player" controls></video>
+<p id="continue"></p>
+</div>
+
+<script>
+if('serviceWorker'in navigator){navigator.serviceWorker.register('service-worker.js')}
+
+const catalogo=[
+{type:"movie",title:"Filme Exemplo",thumb:"https://via.placeholder.com/300x450?text=Filme",
+url:"https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"},
+{type:"series",title:"Série Exemplo",thumb:"https://via.placeholder.com/300x450?text=Serie",
+seasons:[{name:"Temporada 1",episodes:[
+{title:"Episódio 1",url:"https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"}
+]}]}
+];
+
+function login(){
+if(user.value==="admin"&&pass.value==="admin"){
+loginDiv();renderCatalog()
+}else error.innerText="Login inválido"
+}
+
+function loginDiv(){
+login.classList.add("hidden")
+app.classList.remove("hidden")
+}
+
+const player=document.getElementById("player")
+player.addEventListener("timeupdate",()=>{
+localStorage.setItem("time",player.currentTime)
+localStorage.setItem("src",player.src)
+})
+
+function play(url){
+player.src=url
+if(localStorage.getItem("src")===url)
+player.currentTime=localStorage.getItem("time")||0
+player.play()
+}
+
+function renderCatalog(){
+catalogo.forEach(i=>{
+const d=document.createElement("div")
+d.className="card"
+d.innerHTML=`<img src="${i.thumb}"><p>${i.title}</p>`
+d.onclick=()=>i.type==="movie"?play(i.url):renderSeries(i)
+catalogoDiv.appendChild(d)
+})
+}
+
+function renderSeries(s){
+catalogoDiv.innerHTML=`<h3>${s.title}</h3>`
+s.seasons.forEach(t=>{
+const h=document.createElement("h4")
+h.innerText=t.name
+catalogoDiv.appendChild(h)
+t.episodes.forEach(e=>{
+const b=document.createElement("button")
+b.innerText=e.title
+b.onclick=()=>play(e.url)
+catalogoDiv.appendChild(b)
+})
+})
+}
+
+const catalogoDiv=document.getElementById("catalogo")
+</script>
+</body>
+</html>
